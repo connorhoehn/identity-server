@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .hero-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4rem 0;
+    }
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 25px;
+      padding: 12px 30px;
+    }
+    .feature-card {
+      transition: transform 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">🔐 Identity Server</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/admin">Admin</a>
+        <a class="nav-link" href="/.well-known/openid-configuration">Discovery</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="hero-section">
+    <div class="container text-center">
+      <h1 class="display-4 fw-bold">Local Identity Server</h1>
+      <p class="lead">OpenID Connect Provider for Local Development</p>
+      <p class="mb-4">Issuer: <code><%= issuer %></code></p>
+      <a href="/admin" class="btn btn-light btn-lg">Admin Panel</a>
+    </div>
+  </div>
+
+  <div class="container my-5">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body text-center">
+            <div class="display-1 mb-3">🔑</div>
+            <h5 class="card-title">OAuth 2.0 / OpenID Connect</h5>
+            <p class="card-text">Full-featured OIDC provider with support for authorization code flow, refresh tokens, and more.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body text-center">
+            <div class="display-1 mb-3">👥</div>
+            <h5 class="card-title">User Management</h5>
+            <p class="card-text">Built-in user registration, authentication, and profile management with PostgreSQL storage.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body text-center">
+            <div class="display-1 mb-3">🔧</div>
+            <h5 class="card-title">Development Ready</h5>
+            <p class="card-text">Configured for local development with Redis session storage and comprehensive testing tools.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">🔍 Discovery Endpoint</h5>
+            <p class="card-text">OpenID Connect discovery document</p>
+            <a href="/.well-known/openid-configuration" class="btn btn-primary">View Discovery</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">🧪 Test Client</h5>
+            <p class="card-text">Use the dedicated test client application (runs on port 3006) to test OIDC authentication flows with full PKCE support.</p>
+            <p class="text-muted">Start the test client: <code>cd test-client && npm start</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

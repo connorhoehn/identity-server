@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFA Device Setup</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .mfa-card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      margin: 50px auto;
+    }
+    .qr-code {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .backup-codes {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      font-family: monospace;
+    }
+    .step {
+      border-left: 4px solid #667eea;
+      padding-left: 15px;
+      margin: 20px 0;
+    }
+    .btn {
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .form-control {
+      border-radius: 10px;
+      border: 2px solid #e9ecef;
+      padding: 12px 16px;
+    }
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .device-item {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      border: 1px solid #e9ecef;
+    }
+    .verified-badge {
+      background: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 0.8em;
+    }
+    .unverified-badge {
+      background: #ffc107;
+      color: #212529;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card mfa-card">
+          <div class="card-body p-5">
+            <div class="text-center mb-4">
+              <h2 class="card-title">🛡️ Multi-Factor Authentication</h2>
+              <p class="text-muted">Secure your account with an additional layer of protection</p>
+            </div>
+            
+            <!-- Test Form -->
+            <div id="test-form" class="mb-4">
+              <h5>Test MFA Setup (Development)</h5>
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 
+                This is a test interface for MFA functionality. In production, this would be integrated into the user's account dashboard.
+              </div>
+              
+              <div class="mb-3">
+                <label for="test-user-id" class="form-label">User ID</label>
+                <input type="text" class="form-control" id="test-user-id" placeholder="Enter user ID (e.g., 1, 2, 3...)">
+              </div>
+              
+              <div class="mb-3">
+                <label for="test-pool-id" class="form-label">Pool ID</label>
+                <input type="text" class="form-control" id="test-pool-id" value="default-pool" placeholder="Enter pool ID">
+              </div>
+              
+              <button type="button" class="btn btn-primary" onclick="setupMfa()">
+                <i class="fas fa-shield-alt"></i> Setup MFA Device
+              </button>
+              
+              <button type="button" class="btn btn-secondary ms-2" onclick="loadDevices()">
+                <i class="fas fa-list"></i> Load Devices
+              </button>
+            </div>
+            
+            <!-- MFA Setup Steps -->
+            <div id="setup-steps" style="display: none;">
+              <div class="step">
+                <h6><i class="fas fa-mobile-alt"></i> Step 1: Install Authenticator App</h6>
+                <p>Download an authenticator app like Google Authenticator, Microsoft Authenticator, or Authy on your mobile device.</p>
+              </div>
+              
+              <div class="step">
+                <h6><i class="fas fa-qrcode"></i> Step 2: Scan QR Code</h6>
+                <div id="qr-code-container" class="qr-code">
+                  <!-- QR code will be inserted here -->
+                </div>
+              </div>
+              
+              <div class="step">
+                <h6><i class="fas fa-key"></i> Step 3: Enter Verification Code</h6>
+                <div class="mb-3">
+                  <input type="text" class="form-control" id="verification-code" placeholder="Enter 6-digit code from your app" maxlength="6">
+                </div>
+                <button type="button" class="btn btn-success" onclick="verifySetup()">
+                  <i class="fas fa-check"></i> Verify & Enable MFA
+                </button>
+                <button type="button" class="btn btn-secondary ms-2" onclick="cancelSetup()">
+                  Cancel
+                </button>
+              </div>
+              
+              <div class="step">
+                <h6><i class="fas fa-life-ring"></i> Step 4: Save Backup Codes</h6>
+                <p>Save these backup codes in a secure location. You can use them to access your account if you lose your device.</p>
+                <div id="backup-codes-container" class="backup-codes">
+                  <!-- Backup codes will be inserted here -->
+                </div>
+              </div>
+            </div>
+            
+            <!-- Current Devices -->
+            <div id="current-devices">
+              <h5>Current MFA Devices</h5>
+              <div id="devices-list">
+                <p class="text-muted">No devices found. Click "Load Devices" to refresh.</p>
+              </div>
+            </div>
+            
+            <!-- Status Messages -->
+            <div id="status-messages"></div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSetup = null;
+    
+    function showMessage(message, type = 'info') {
+      const container = document.getElementById('status-messages');
+      const alertClass = type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info';
+      container.innerHTML = `<div class="alert ${alertClass} mt-3">${message}</div>`;
+      setTimeout(() => { container.innerHTML = ''; }, 5000);
+    }
+    
+    async function setupMfa() {
+      const userId = document.getElementById('test-user-id').value;
+      const poolId = document.getElementById('test-pool-id').value;
+      
+      if (!userId || !poolId) {
+        showMessage('Please enter both User ID and Pool ID', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/mfa/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, poolId, deviceName: 'Test Device' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentSetup = data;
+          showQrCode(data.qrCode);
+          showBackupCodes(data.backupCodes);
+          document.getElementById('setup-steps').style.display = 'block';
+          showMessage('MFA setup initiated! Scan the QR code with your authenticator app.', 'success');
+        } else {
+          showMessage(data.error || 'Failed to setup MFA', 'error');
+        }
+      } catch (error) {
+        showMessage('Network error: ' + error.message, 'error');
+      }
+    }
+    
+    function showQrCode(qrCodeDataUrl) {
+      document.getElementById('qr-code-container').innerHTML = 
+        `<img src="${qrCodeDataUrl}" alt="QR Code" style="max-width: 200px;">`;
+    }
+    
+    function showBackupCodes(codes) {
+      const codesHtml = codes.map(code => `<div>${code}</div>`).join('');
+      document.getElementById('backup-codes-container').innerHTML = codesHtml;
+    }
+    
+    async function verifySetup() {
+      const code = document.getElementById('verification-code').value;
+      
+      if (!code || code.length !== 6) {
+        showMessage('Please enter a 6-digit verification code', 'error');
+        return;
+      }
+      
+      if (!currentSetup) {
+        showMessage('No setup in progress', 'error');
+        return;
+      }
+      
+      const userId = document.getElementById('test-user-id').value;
+      const poolId = document.getElementById('test-pool-id').value;
+      
+      try {
+        const response = await fetch('/api/mfa/verify-setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            userId, 
+            poolId, 
+            deviceId: currentSetup.deviceId, 
+            totpCode: code 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showMessage('MFA device verified successfully! Two-factor authentication is now enabled.', 'success');
+          document.getElementById('setup-steps').style.display = 'none';
+          document.getElementById('verification-code').value = '';
+          currentSetup = null;
+          loadDevices(); // Refresh the devices list
+        } else {
+          showMessage(data.error || 'Verification failed', 'error');
+        }
+      } catch (error) {
+        showMessage('Network error: ' + error.message, 'error');
+      }
+    }
+    
+    function cancelSetup() {
+      document.getElementById('setup-steps').style.display = 'none';
+      document.getElementById('verification-code').value = '';
+      currentSetup = null;
+      showMessage('MFA setup cancelled', 'info');
+    }
+    
+    async function loadDevices() {
+      const userId = document.getElementById('test-user-id').value;
+      const poolId = document.getElementById('test-pool-id').value;
+      
+      if (!userId || !poolId) {
+        showMessage('Please enter both User ID and Pool ID', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/mfa/devices/${poolId}/${userId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          displayDevices(data.devices);
+        } else {
+          showMessage(data.error || 'Failed to load devices', 'error');
+        }
+      } catch (error) {
+        showMessage('Network error: ' + error.message, 'error');
+      }
+    }
+    
+    function displayDevices(devices) {
+      const container = document.getElementById('devices-list');
+      
+      if (devices.length === 0) {
+        container.innerHTML = '<p class="text-muted">No MFA devices configured.</p>';
+        return;
+      }
+      
+      const devicesHtml = devices.map(device => `
+        <div class="device-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${device.deviceName}</h6>
+              <small class="text-muted">
+                Type: ${device.deviceType} | 
+                Created: ${new Date(device.createdAt).toLocaleDateString()} |
+                ${device.lastUsed ? 'Last used: ' + new Date(device.lastUsed).toLocaleDateString() : 'Never used'}
+              </small>
+            </div>
+            <div>
+              <span class="${device.isVerified ? 'verified-badge' : 'unverified-badge'}">
+                ${device.isVerified ? '✓ Verified' : '⚠ Unverified'}
+              </span>
+              <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeDevice('${device.deviceId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      container.innerHTML = devicesHtml;
+    }
+    
+    async function removeDevice(deviceId) {
+      if (!confirm('Are you sure you want to remove this MFA device?')) {
+        return;
+      }
+      
+      const userId = document.getElementById('test-user-id').value;
+      const poolId = document.getElementById('test-pool-id').value;
+      
+      try {
+        const response = await fetch(`/api/mfa/device/${poolId}/${userId}/${deviceId}`, {
+          method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showMessage('MFA device removed successfully', 'success');
+          loadDevices(); // Refresh the devices list
+        } else {
+          showMessage(data.error || 'Failed to remove device', 'error');
+        }
+      } catch (error) {
+        showMessage('Network error: ' + error.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

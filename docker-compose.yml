@@ -1,0 +1,77 @@
+services:
+
+  identity-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: identity-server
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - DATA_PROVIDER=${DATA_PROVIDER:-postgresql}
+      - ISSUER=http://localhost:3005
+      - EXTERNAL_ISSUER=http://localhost:3005
+      - COOKIE_KEYS=dev-secret-key-1,dev-secret-key-2
+      - JWT_SECRET=dev-jwt-secret
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_NAME=identity_server
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - REDIS_URL=redis://core-redis:6379
+      - DYNAMODB_ENDPOINT=http://host.docker.internal:8001
+      - DYNAMODB_REGION=us-east-1
+      - CLIENT_ID=local-test-client
+      - CLIENT_SECRET=local-test-client-secret
+      - CLIENT_REDIRECT_URIS=http://localhost:3006/callback,http://localhost:3007/callback
+      - POST_LOGOUT_REDIRECT_URIS=http://localhost:3006/,http://localhost:3006/logout-callback
+      - ADMIN_EMAIL=admin@localhost
+      - ADMIN_PASSWORD=admin123
+    networks:
+      - identity-network
+      - shared-network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  test-client:
+    build:
+      context: ./test-client
+      dockerfile: Dockerfile
+    container_name: oidc-test-client
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - PORT=3006
+      - DISCOVERY_URL=http://localhost:3005
+      - CLIENT_ID=local-test-client
+      - CLIENT_SECRET=local-test-client-secret
+      - REDIRECT_URI=http://localhost:3006/callback
+      - SESSION_SECRET=test-client-session-secret
+    networks:
+      - identity-network
+      - shared-network
+    depends_on:
+      - identity-server
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  identity-network:
+    driver: bridge
+  shared-network:
+    external: true

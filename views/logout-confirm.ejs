@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    .logout-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #ff6b6b;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .message {
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 120px;
+    }
+    .logout-btn {
+      background: #ff6b6b;
+      color: white;
+    }
+    .logout-btn:hover {
+      background: #ff5252;
+      transform: translateY(-1px);
+    }
+    .stay-btn {
+      background: #4ecdc4;
+      color: white;
+    }
+    .stay-btn:hover {
+      background: #26a69a;
+      transform: translateY(-1px);
+    }
+    .client-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logout-icon">🚪</div>
+    <h1><%= title %></h1>
+    <div class="message">
+      Are you sure you want to sign out?
+    </div>
+    
+    <% if (client_id) { %>
+    <div class="client-info">
+      <strong>Application:</strong> <%= client_id %>
+    </div>
+    <% } %>
+    
+    <form method="POST" action="/auth/logout-confirm">
+      <input type="hidden" name="post_logout_redirect_uri" value="<%= post_logout_redirect_uri || '' %>">
+      <input type="hidden" name="client_id" value="<%= client_id || '' %>">
+      <input type="hidden" name="id_token_hint" value="<%= id_token_hint || '' %>">
+      
+      <div class="button-group">
+        <button type="submit" name="action" value="logout" class="logout-btn">
+          Yes, Sign Out
+        </button>
+        <button type="submit" name="action" value="stay" class="stay-btn">
+          No, Stay Signed In
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

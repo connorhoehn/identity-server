@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .mfa-card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      margin: 50px auto;
+    }
+    .qr-code {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .backup-codes {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      font-family: monospace;
+    }
+    .step {
+      border-left: 4px solid #667eea;
+      padding-left: 15px;
+      margin: 20px 0;
+    }
+    .btn {
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .form-control {
+      border-radius: 10px;
+      border: 2px solid #e9ecef;
+      padding: 12px 16px;
+      font-size: 16px;
+    }
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .progress-bar {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+    }
+    .spinner-border-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card mfa-card">
+          <div class="card-header bg-transparent text-center py-4">
+            <h2><i class="fas fa-shield-alt text-primary"></i> Set Up Two-Factor Authentication</h2>
+            <p class="text-muted mb-0">Secure your account with an authenticator app</p>
+          </div>
+          <div class="card-body p-4">
+            
+            <!-- Progress indicator -->
+            <div class="mb-4">
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: 33%"></div>
+              </div>
+              <small class="text-muted">Step 1 of 3: Setup Authentication</small>
+            </div>
+
+            <!-- Step 1: Install App -->
+            <div class="step">
+              <h5><i class="fas fa-mobile-alt text-primary"></i> Step 1: Install an Authenticator App</h5>
+              <p class="text-muted">Download one of these apps on your mobile device:</p>
+              <div class="row text-center">
+                <div class="col-4">
+                  <i class="fab fa-google fa-2x text-success mb-2"></i>
+                  <p><small>Google Authenticator</small></p>
+                </div>
+                <div class="col-4">
+                  <i class="fas fa-key fa-2x text-primary mb-2"></i>
+                  <p><small>Authy</small></p>
+                </div>
+                <div class="col-4">
+                  <i class="fas fa-shield-alt fa-2x text-info mb-2"></i>
+                  <p><small>Microsoft Authenticator</small></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Scan QR Code -->
+            <div class="step">
+              <h5><i class="fas fa-qrcode text-primary"></i> Step 2: Scan QR Code</h5>
+              <p class="text-muted">Open your authenticator app and scan this QR code:</p>
+              
+              <div class="qr-code" id="qrCodeContainer">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Generating QR code...</p>
+              </div>
+              
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Can't scan?</strong> You can manually enter this code instead:
+                <div class="mt-2">
+                  <code id="manualEntry" class="user-select-all">Loading...</code>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Verify -->
+            <div class="step">
+              <h5><i class="fas fa-check-circle text-primary"></i> Step 3: Verify Setup</h5>
+              <p class="text-muted">Enter the 6-digit code from your authenticator app:</p>
+              
+              <form id="verifyForm">
+                <div class="mb-3">
+                  <input type="hidden" name="uid" value="<%= uid %>">
+                  <input type="hidden" name="userId" value="<%= user.id %>">
+                  <input type="hidden" name="poolId" value="<%= user.poolId %>">
+                  <input type="text" class="form-control form-control-lg text-center" 
+                         id="totpCode" name="totpCode" placeholder="000000" 
+                         maxlength="6" pattern="[0-9]{6}" required
+                         style="font-size: 24px; letter-spacing: 8px;">
+                </div>
+                
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-primary btn-lg" id="verifyButton">
+                    <span id="verifySpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+                    Verify & Complete Setup
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Backup Codes (will be shown after verification) -->
+            <div class="step d-none" id="backupCodesSection">
+              <h5><i class="fas fa-key text-warning"></i> Backup Codes</h5>
+              <p class="text-muted">Save these backup codes in a safe place. You can use them to access your account if you lose your device:</p>
+              <div class="backup-codes" id="backupCodes">
+                <!-- Backup codes will be inserted here -->
+              </div>
+              <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Important:</strong> Each backup code can only be used once. Keep them secure!
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <p class="text-muted mb-0">
+              <i class="fas fa-lock"></i> Your account security is our priority
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let deviceId = null;
+    let setupCompleted = false;
+
+    // Initialize MFA setup when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeMfaSetup();
+    });
+
+    async function initializeMfaSetup() {
+      try {
+        const response = await fetch('/api/mfa/setup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: '<%= user.id %>',
+            poolId: '<%= user.poolId %>',
+            deviceName: 'Primary Device'
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          deviceId = data.deviceId;
+          
+          // Display QR code
+          document.getElementById('qrCodeContainer').innerHTML = `
+            <img src="${data.qrCode}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+            <p class="mt-2">Scan with your authenticator app</p>
+          `;
+          
+          // Display manual entry code
+          document.getElementById('manualEntry').textContent = data.secret || 'Unable to load';
+          
+          // Update progress
+          updateProgress(66, 'Step 2 of 3: Scan QR Code');
+          
+        } else {
+          throw new Error(data.error || 'Failed to setup MFA');
+        }
+      } catch (error) {
+        console.error('MFA setup error:', error);
+        document.getElementById('qrCodeContainer').innerHTML = `
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            Failed to generate QR code. Please try again.
+          </div>
+        `;
+      }
+    }
+
+    // Handle verification form
+    document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const totpCode = document.getElementById('totpCode').value;
+      const verifyButton = document.getElementById('verifyButton');
+      const verifySpinner = document.getElementById('verifySpinner');
+      
+      // Prevent double submission
+      if (verifyButton.disabled) {
+        return;
+      }
+      
+      if (totpCode.length !== 6) {
+        showAlert('Please enter a 6-digit code', 'warning');
+        return;
+      }
+      
+      // Show loading state immediately
+      verifyButton.disabled = true;
+      verifySpinner.classList.remove('d-none');
+      
+      try {
+        const response = await fetch('/api/mfa/verify-setup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            deviceId: deviceId,
+            totpCode: totpCode,
+            userId: '<%= user.id %>',
+            poolId: '<%= user.poolId %>'
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          setupCompleted = true;
+          
+          // Update progress
+          updateProgress(100, 'Setup Complete!');
+          
+          // Show backup codes
+          if (data.backupCodes) {
+            showBackupCodes(data.backupCodes);
+          }
+          
+          // Show success message
+          showAlert('Two-factor authentication has been successfully set up!', 'success');
+          
+          // Complete the registration flow
+          setTimeout(() => {
+            completeSetup();
+          }, 3000);
+          
+        } else {
+          throw new Error(data.error || 'Verification failed');
+        }
+      } catch (error) {
+        console.error('Verification error:', error);
+        showAlert('Invalid code. Please try again.', 'danger');
+        
+        // Only re-enable button on error
+        verifyButton.disabled = false;
+        verifySpinner.classList.add('d-none');
+      }
+    });
+
+    function updateProgress(percentage, text) {
+      const progressBar = document.querySelector('.progress-bar');
+      const progressText = document.querySelector('.progress').nextElementSibling;
+      
+      progressBar.style.width = percentage + '%';
+      progressText.textContent = text;
+    }
+
+    function showBackupCodes(codes) {
+      const backupCodesSection = document.getElementById('backupCodesSection');
+      const backupCodesDiv = document.getElementById('backupCodes');
+      
+      backupCodesDiv.innerHTML = codes.map(code => 
+        `<div class="d-flex justify-content-between align-items-center mb-1">
+          <code class="user-select-all">${code}</code>
+          <i class="fas fa-copy text-muted" onclick="copyToClipboard('${code}')" style="cursor: pointer;"></i>
+        </div>`
+      ).join('');
+      
+      backupCodesSection.classList.remove('d-none');
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showAlert('Backup code copied to clipboard', 'info');
+      });
+    }
+
+    function showAlert(message, type) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.step'));
+      
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 5000);
+    }
+
+    async function completeSetup() {
+      try {
+        const response = await fetch('/mfa/setup/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: '<%= uid %>'
+          })
+        });
+        
+        if (response.redirected) {
+          window.location.href = response.url;
+        } else {
+          // Handle JSON response
+          const data = await response.json();
+          if (data.success) {
+            if (data.redirectUrl) {
+              // Session expired, redirect to login with hint
+              showAlert('MFA setup completed! Redirecting to login...', 'success');
+              setTimeout(() => {
+                window.location.href = data.redirectUrl;
+              }, 2000);
+            } else {
+              // Normal completion
+              window.location.href = '/';
+            }
+          } else {
+            throw new Error(data.error || 'Failed to complete setup');
+          }
+        }
+      } catch (error) {
+        console.error('Error completing setup:', error);
+        showAlert('MFA setup completed successfully! Please log in manually to continue.', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 3000);
+      }
+    }
+
+    // Format TOTP code input
+    document.getElementById('totpCode').addEventListener('input', function(e) {
+      const value = e.target.value.replace(/\D/g, '');
+      e.target.value = value;
+      
+      if (value.length === 6) {
+        e.target.classList.add('border-success');
+      } else {
+        e.target.classList.remove('border-success');
+      }
+    });
+
+    // Prevent page refresh/close during setup
+    window.addEventListener('beforeunload', function(e) {
+      if (!setupCompleted) {
+        e.preventDefault();
+        e.returnValue = 'MFA setup is not complete. Are you sure you want to leave?';
+      }
+    });
+  </script>
+</body>
+</html>

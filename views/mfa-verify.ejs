@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .mfa-card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      margin: 50px auto;
+    }
+    .step {
+      border-left: 4px solid #667eea;
+      padding-left: 15px;
+      margin: 20px 0;
+    }
+    .btn {
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .form-control {
+      border-radius: 10px;
+      border: 2px solid #e9ecef;
+      padding: 12px 16px;
+      font-size: 16px;
+    }
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .spinner-border-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="card mfa-card">
+          <div class="card-header bg-transparent text-center py-4">
+            <h2><i class="fas fa-shield-alt text-primary"></i> Two-Factor Authentication</h2>
+            <p class="text-muted mb-0">Enter your authentication code</p>
+          </div>
+          <div class="card-body p-4">
+            
+            <% if (error) { %>
+              <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <%= error %>
+              </div>
+            <% } %>
+
+            <div class="step">
+              <h5><i class="fas fa-mobile-alt text-primary"></i> Authentication Required</h5>
+              <p class="text-muted">Open your authenticator app and enter the 6-digit verification code:</p>
+              
+              <form method="POST" action="/interaction/<%= uid %>/mfa-verify" id="verifyForm">
+                <div class="mb-3">
+                  <input type="text" class="form-control form-control-lg text-center" 
+                         id="totpCode" name="totpCode" placeholder="000000" 
+                         maxlength="6" pattern="[0-9]{6}" required autofocus
+                         style="font-size: 24px; letter-spacing: 8px;">
+                  <div class="form-text text-center">Enter the 6-digit code from your authenticator app</div>
+                </div>
+                
+                <div class="d-grid gap-2 mb-3">
+                  <button type="submit" class="btn btn-primary btn-lg" id="verifyButton">
+                    <span id="verifySpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+                    Verify & Continue
+                  </button>
+                </div>
+              </form>
+
+              <div class="text-center">
+                <p class="text-muted mb-2">Having trouble?</p>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showBackupCodeForm()">
+                  <i class="fas fa-key"></i> Use backup code
+                </button>
+              </div>
+              
+              <!-- Backup code form (hidden by default) -->
+              <div id="backupCodeForm" class="d-none mt-3">
+                <hr>
+                <form method="POST" action="/interaction/<%= uid %>/mfa-verify-backup" id="backupForm">
+                  <div class="mb-3">
+                    <label for="backupCode" class="form-label">Backup Code</label>
+                    <input type="text" class="form-control" id="backupCode" name="backupCode" 
+                           placeholder="Enter backup code" maxlength="12" required>
+                    <div class="form-text">Enter one of your saved backup codes</div>
+                  </div>
+                  <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-warning" id="backupButton">
+                      <span id="backupSpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+                      Verify Backup Code
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideBackupCodeForm()">
+                      Back to authenticator code
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <p class="text-muted mb-0">
+              <i class="fas fa-lock"></i> Secure authentication in progress
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Format TOTP code input
+    document.getElementById('totpCode').addEventListener('input', function(e) {
+      const value = e.target.value.replace(/\D/g, '');
+      e.target.value = value;
+      
+      if (value.length === 6) {
+        e.target.classList.add('border-success');
+      } else {
+        e.target.classList.remove('border-success');
+      }
+    });
+
+    // Handle verify form submission
+    document.getElementById('verifyForm').addEventListener('submit', function(e) {
+      const verifyButton = document.getElementById('verifyButton');
+      const verifySpinner = document.getElementById('verifySpinner');
+      
+      // Prevent double submission
+      if (verifyButton.disabled) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Show loading state immediately
+      verifyButton.disabled = true;
+      verifySpinner.classList.remove('d-none');
+    });
+
+    // Handle backup form submission
+    document.getElementById('backupForm').addEventListener('submit', function(e) {
+      const backupButton = document.getElementById('backupButton');
+      const backupSpinner = document.getElementById('backupSpinner');
+      
+      // Prevent double submission
+      if (backupButton.disabled) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Show loading state immediately
+      backupButton.disabled = true;
+      backupSpinner.classList.remove('d-none');
+    });
+
+    // Show/hide backup code form
+    function showBackupCodeForm() {
+      document.getElementById('backupCodeForm').classList.remove('d-none');
+      document.getElementById('backupCode').focus();
+    }
+
+    function hideBackupCodeForm() {
+      document.getElementById('backupCodeForm').classList.add('d-none');
+      document.getElementById('totpCode').focus();
+    }
+
+    // Auto-focus on TOTP input
+    document.getElementById('totpCode').focus();
+  </script>
+</body>
+</html>

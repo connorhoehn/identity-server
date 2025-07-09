@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/admin">🔐 Identity Server Admin</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/admin">Dashboard</a>
+        <a class="nav-link" href="/admin/users">Users</a>
+        <a class="nav-link" href="/admin/applications">Applications</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1><%= isEdit ? '✏️ Edit Application' : '🖥️ Create New Application' %></h1>
+            <p class="lead">Configure an OIDC client application</p>
+          </div>
+          <a href="/admin/applications" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Applications
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof breadcrumbs !== 'undefined' && breadcrumbs) { %>
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <% breadcrumbs.forEach(crumb => { %>
+            <% if (crumb.active) { %>
+              <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+            <% } else { %>
+              <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+            <% } %>
+          <% }); %>
+        </ol>
+      </nav>
+    <% } %>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Application Configuration</h5>
+          </div>
+          <div class="card-body">
+            <form action="<%= isEdit ? `/admin/applications/${application.clientId || application.client_id}` : '/admin/applications' %>" method="POST">
+              <% if (isEdit) { %>
+                <input type="hidden" name="_method" value="PUT">
+              <% } %>
+              
+              <!-- Basic Information -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="client_name" class="form-label">Application Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="client_name" name="client_name" 
+                         value="<%= application.clientName || application.client_name || '' %>" 
+                         placeholder="e.g., My Web App" required>
+                  <div class="form-text">Human-readable name for this application</div>
+                </div>
+                
+                <% if (isEdit) { %>
+                <div class="col-md-6 mb-3">
+                  <label for="client_id" class="form-label">Client ID</label>
+                  <input type="text" class="form-control" id="client_id" name="client_id" 
+                         value="<%= application.clientId || application.client_id || '' %>" readonly>
+                  <div class="form-text">Unique identifier for this application (read-only)</div>
+                </div>
+                <% } %>
+              </div>
+
+              <!-- Redirect URIs -->
+              <div class="mb-3">
+                <label for="redirect_uris" class="form-label">Redirect URIs <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="redirect_uris" name="redirect_uris" 
+                          rows="4" placeholder="https://example.com/callback" required><%= (application.redirectUris || application.redirect_uris || []).join('\n') %></textarea>
+                <div class="form-text">Enter one URI per line. These are the allowed callback URLs after authentication.</div>
+              </div>
+
+              <!-- Grant Types -->
+              <div class="mb-3">
+                <label class="form-label">Grant Types</label>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="authorization_code" name="grant_types" value="authorization_code"
+                             <%= (application.grantTypes || application.grant_types || ['authorization_code']).includes('authorization_code') ? 'checked' : '' %>>
+                      <label class="form-check-label" for="authorization_code">
+                        Authorization Code
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="refresh_token" name="grant_types" value="refresh_token"
+                             <%= (application.grantTypes || application.grant_types || ['refresh_token']).includes('refresh_token') ? 'checked' : '' %>>
+                      <label class="form-check-label" for="refresh_token">
+                        Refresh Token
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="client_credentials" name="grant_types" value="client_credentials"
+                             <%= (application.grantTypes || application.grant_types || []).includes('client_credentials') ? 'checked' : '' %>>
+                      <label class="form-check-label" for="client_credentials">
+                        Client Credentials
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="implicit" name="grant_types" value="implicit"
+                             <%= (application.grantTypes || application.grant_types || []).includes('implicit') ? 'checked' : '' %>>
+                      <label class="form-check-label" for="implicit">
+                        Implicit (Legacy)
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scope -->
+              <div class="mb-3">
+                <label for="scope" class="form-label">Scope</label>
+                <input type="text" class="form-control" id="scope" name="scope" 
+                       value="<%= application.scope || 'openid profile email' %>" 
+                       placeholder="openid profile email">
+                <div class="form-text">Space-separated list of OAuth 2.0 scopes</div>
+              </div>
+
+              <!-- Submit Buttons -->
+              <div class="d-flex justify-content-between mt-4">
+                <a href="/admin/applications" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                  <%= isEdit ? 'Update Application' : 'Create Application' %>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">💡 Tips</h6>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Redirect URIs:</strong> Must be exact matches. Include protocol (https://) and port if needed.
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Authorization Code:</strong> Most common flow for web applications.
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Client Credentials:</strong> For server-to-server communication.
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Scope:</strong> Controls what information the application can access.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <% if (isEdit && (application.clientSecret || application.client_secret)) { %>
+        <div class="card mt-3">
+          <div class="card-header">
+            <h6 class="mb-0">🔑 Client Secret</h6>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <input type="password" class="form-control" id="clientSecret" 
+                     value="<%= application.clientSecret || application.client_secret %>" readonly>
+              <button class="btn btn-outline-secondary" type="button" onclick="toggleSecret()">
+                <i class="fas fa-eye" id="secretIcon"></i>
+              </button>
+            </div>
+            <div class="form-text">Keep this secret secure. It's used to authenticate your application.</div>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toggleSecret() {
+      const input = document.getElementById('clientSecret');
+      const icon = document.getElementById('secretIcon');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    }
+  </script>
+</body>
+</html>

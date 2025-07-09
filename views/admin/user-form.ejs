@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/admin">🔐 Identity Server Admin</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/admin">Dashboard</a>
+        <a class="nav-link" href="/admin/users">Users</a>
+        <a class="nav-link" href="/admin/applications">Applications</a>
+      </div>
+    </div>
+  </nav>
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><%= title %></h1>
+        <nav>
+            <a href="/admin">Dashboard</a> |
+            <a href="/admin/users">Users</a> |
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1><%= isEdit ? '✏️ Edit User' : '👤 Create New User' %></h1>
+            <p class="lead">Manage user account information</p>
+          </div>
+          <a href="<%= poolSpecific ? `/admin/pools/${poolId}/users` : '/admin/users' %>" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof breadcrumbs !== 'undefined' && breadcrumbs) { %>
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <% breadcrumbs.forEach(crumb => { %>
+            <% if (crumb.active) { %>
+              <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+            <% } else { %>
+              <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+            <% } %>
+          <% }); %>
+        </ol>
+      </nav>
+    <% } %>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">User Information</h5>
+          </div>
+          <div class="card-body">
+            <form action="<%= poolSpecific ? (isEdit ? `/admin/pools/${poolId}/users/${user.id}` : `/admin/pools/${poolId}/users`) : (isEdit ? `/admin/users/${user.id}` : '/admin/users') %>" method="POST">
+              <% if (isEdit) { %>
+                <input type="hidden" name="_method" value="PUT">
+              <% } %>
+              
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email" name="email" 
+                       value="<%= user.email || '' %>" 
+                       placeholder="user@example.com" 
+                       autocomplete="email" required>
+                <div class="form-text">This will be used as the user's login identifier</div>
+              </div>
+
+              <!-- Name fields -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="given_name" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="given_name" name="given_name" 
+                         value="<%= user.given_name || '' %>" 
+                         placeholder="John" 
+                         autocomplete="given-name">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="family_name" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="family_name" name="family_name" 
+                         value="<%= user.family_name || '' %>" 
+                         placeholder="Doe" 
+                         autocomplete="family-name">
+                </div>
+              </div>
+
+              <!-- Nickname -->
+              <div class="mb-3">
+                <label for="nickname" class="form-label">Nickname</label>
+                <input type="text" class="form-control" id="nickname" name="nickname" 
+                       value="<%= user.nickname || '' %>" 
+                       placeholder="johndoe" 
+                       autocomplete="nickname">
+                <div class="form-text">Optional display name for the user</div>
+              </div>
+
+              <!-- Password field for new users -->
+              <% if (!isEdit) { %>
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="password" name="password" 
+                         placeholder="••••••••" 
+                         autocomplete="new-password" required>
+                  <div class="form-text">Choose a secure password for the user</div>
+                </div>
+              <% } else { %>
+                <div class="mb-3">
+                  <label for="password" class="form-label">New Password</label>
+                  <input type="password" class="form-control" id="password" name="password" 
+                         placeholder="Leave empty to keep current password" 
+                         autocomplete="new-password">
+                  <div class="form-text">Leave empty to keep the current password</div>
+                </div>
+              <% } %>
+
+              <!-- Submit Buttons -->
+              <div class="d-flex justify-content-between mt-4">
+                <a href="<%= poolSpecific ? `/admin/pools/${poolId}/users` : '/admin/users' %>" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                  <%= isEdit ? 'Update User' : 'Create User' %>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">💡 User Management Tips</h6>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Email:</strong> Must be unique across the system
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Password:</strong> Should be strong and secure
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Names:</strong> Used for personalization in the UI
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Nickname:</strong> Optional display name shown to other users
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <% if (poolSpecific && typeof userPool !== 'undefined') { %>
+        <div class="card mt-3">
+          <div class="card-header">
+            <h6 class="mb-0">🏢 Pool Information</h6>
+          </div>
+          <div class="card-body">
+            <p><strong>Pool:</strong> <%= userPool.poolName %></p>
+            <p><strong>Pool ID:</strong> <code><%= poolId %></code></p>
+            <p class="text-muted mb-0">This user will be created in the <%= userPool.poolName %> pool.</p>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

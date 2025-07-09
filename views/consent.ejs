@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+    }
+    .consent-card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card consent-card">
+          <div class="card-body p-5">
+            <div class="text-center mb-4">
+              <h2 class="card-title">🔐 Authorize Application</h2>
+              <p class="text-muted">The application is requesting access to your account</p>
+            </div>
+            
+            <div class="mb-4">
+              <h5>Application Details</h5>
+              <p><strong>Client ID:</strong> <%= params.client_id %></p>
+              <p><strong>Redirect URI:</strong> <%= params.redirect_uri %></p>
+            </div>
+            
+            <div class="mb-4">
+              <h5>Requested Permissions</h5>
+              <div class="list-group">
+                <% if (params.scope && params.scope.includes('openid')) { %>
+                  <div class="list-group-item">
+                    <strong>OpenID Connect:</strong> Verify your identity
+                  </div>
+                <% } %>
+                <% if (params.scope && params.scope.includes('profile')) { %>
+                  <div class="list-group-item">
+                    <strong>Profile:</strong> Access your basic profile information
+                  </div>
+                <% } %>
+                <% if (params.scope && params.scope.includes('email')) { %>
+                  <div class="list-group-item">
+                    <strong>Email:</strong> Access your email address
+                  </div>
+                <% } %>
+              </div>
+            </div>
+            
+            <form method="post" action="/interaction/<%= uid %>/confirm">
+              <input type="hidden" name="prompt" value="consent"/>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Authorize</button>
+              </div>
+            </form>
+            
+            <form method="post" action="/interaction/<%= uid %>/abort" class="mt-2">
+              <div class="d-grid">
+                <button type="submit" class="btn btn-outline-secondary">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

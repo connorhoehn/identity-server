@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .login-card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .form-control {
+      border-radius: 10px;
+      border: 2px solid #e9ecef;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+    }
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .btn {
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .form-links {
+      transition: all 0.3s ease;
+    }
+    .form-links a {
+      color: #667eea;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .form-links a:hover {
+      color: #764ba2;
+      text-decoration: underline !important;
+    }
+    .alert {
+      border-radius: 10px;
+      border: none;
+    }
+    .form-text {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card {
+      animation: fadeIn 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="card login-card">
+          <div class="card-body p-5">
+            <div class="text-center mb-4">
+              <h2 class="card-title" id="form-title">🔐 Sign In</h2>
+              <p class="text-muted" id="form-subtitle">Enter your credentials to continue</p>
+            </div>
+            
+            <% if (typeof error !== 'undefined' && error) { %>
+              <div class="alert alert-danger" role="alert">
+                <%= error %>
+              </div>
+            <% } %>
+            
+            <% if (typeof success !== 'undefined' && success) { %>
+              <div class="alert alert-success" role="alert">
+                <%= success %>
+              </div>
+            <% } %>
+            
+            <!-- Login Form -->
+            <form method="post" action="/interaction/<%= uid %>/login" id="login-form">
+              <input type="hidden" name="prompt" value="login"/>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+              </div>
+              
+              <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
+            </form>
+
+            <!-- Registration Form -->
+            <form method="post" action="/interaction/<%= uid %>/register" id="register-form" style="display: none;">
+              <input type="hidden" name="prompt" value="register"/>
+              <div class="mb-3">
+                <label for="reg-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="reg-email" name="email" required>
+              </div>
+              
+              <div class="mb-3">
+                <label for="reg-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="reg-password" name="password" required minlength="8">
+                <div class="form-text">Minimum 8 characters</div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="confirm-password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirm-password" name="confirm_password" required>
+              </div>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="given-name" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="given-name" name="given_name">
+                </div>
+                <div class="col-md-6">
+                  <label for="family-name" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="family-name" name="family_name">
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="enable-mfa" name="enable_mfa">
+                  <label class="form-check-label" for="enable-mfa">
+                    <i class="fas fa-shield-alt"></i> Enable Two-Factor Authentication (Optional)
+                  </label>
+                  <div class="form-text">You can also set this up later from your account settings</div>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn btn-success w-100 mb-3">Create Account</button>
+            </form>
+
+            <!-- Forgot Password Form -->
+            <form method="post" action="/interaction/<%= uid %>/forgot-password" id="forgot-form" style="display: none;">
+              <div class="mb-3">
+                <label for="forgot-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="forgot-email" name="email" required>
+                <div class="form-text">We'll send you a reset link</div>
+              </div>
+              
+              <button type="submit" class="btn btn-warning w-100 mb-3">Send Reset Link</button>
+            </form>
+            
+            <!-- Form Navigation -->
+            <div class="text-center mb-3 form-links">
+              <div id="login-links">
+                <a href="#" class="text-decoration-none me-3" onclick="showRegisterForm()">
+                  <i class="fas fa-user-plus"></i> Create Account
+                </a>
+                <a href="#" class="text-decoration-none" onclick="showForgotForm()">
+                  <i class="fas fa-key"></i> Forgot Password?
+                </a>
+              </div>
+              <div id="register-links" style="display: none;">
+                <a href="#" class="text-decoration-none" onclick="showLoginForm()">
+                  <i class="fas fa-arrow-left"></i> Back to Sign In
+                </a>
+              </div>
+              <div id="forgot-links" style="display: none;">
+                <a href="#" class="text-decoration-none" onclick="showLoginForm()">
+                  <i class="fas fa-arrow-left"></i> Back to Sign In
+                </a>
+              </div>
+            </div>
+            
+            <hr class="my-4" style="opacity: 0.3;">
+            
+            <div class="text-center">
+              <small class="text-muted">
+                <i class="fas fa-info-circle"></i> Default admin: admin@localhost / admin123
+              </small>
+            </div>
+
+            <script>
+              function showLoginForm() {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('forgot-form').style.display = 'none';
+                document.getElementById('login-links').style.display = 'block';
+                document.getElementById('register-links').style.display = 'none';
+                document.getElementById('forgot-links').style.display = 'none';
+                document.getElementById('form-title').textContent = '🔐 Sign In';
+                document.getElementById('form-subtitle').textContent = 'Enter your credentials to continue';
+              }
+
+              function showRegisterForm() {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+                document.getElementById('forgot-form').style.display = 'none';
+                document.getElementById('login-links').style.display = 'none';
+                document.getElementById('register-links').style.display = 'block';
+                document.getElementById('forgot-links').style.display = 'none';
+                document.getElementById('form-title').textContent = '👤 Create Account';
+                document.getElementById('form-subtitle').textContent = 'Join us today! Create your new account';
+              }
+
+              function showForgotForm() {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('forgot-form').style.display = 'block';
+                document.getElementById('login-links').style.display = 'none';
+                document.getElementById('register-links').style.display = 'none';
+                document.getElementById('forgot-links').style.display = 'block';
+                document.getElementById('form-title').textContent = '🔑 Reset Password';
+                document.getElementById('form-subtitle').textContent = 'Enter your email to receive a reset link';
+              }
+
+              // Password confirmation validation
+              document.getElementById('confirm-password').addEventListener('input', function() {
+                const password = document.getElementById('reg-password').value;
+                const confirmPassword = this.value;
+                
+                if (password !== confirmPassword) {
+                  this.setCustomValidity('Passwords do not match');
+                } else {
+                  this.setCustomValidity('');
+                }
+              });
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

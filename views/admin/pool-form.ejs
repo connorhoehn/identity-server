@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/admin">🔐 Identity Server Admin</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/admin">Dashboard</a>
+        <a class="nav-link" href="/admin/users">Users</a>
+        <a class="nav-link" href="/admin/applications">Applications</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1><%= isEdit ? '✏️ Edit User Pool' : '🏢 Create New User Pool' %></h1>
+            <p class="lead">Configure a new tenant identity pool</p>
+          </div>
+          <a href="/admin" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof breadcrumbs !== 'undefined' && breadcrumbs) { %>
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <% breadcrumbs.forEach(crumb => { %>
+            <% if (crumb.active) { %>
+              <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+            <% } else { %>
+              <li class="breadcrumb-item"><a href="<%= crumb.url %>"><%= crumb.name %></a></li>
+            <% } %>
+          <% }); %>
+        </ol>
+      </nav>
+    <% } %>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Pool Configuration</h5>
+          </div>
+          <div class="card-body">
+            <form action="<%= isEdit ? `/admin/pools/${pool.poolId}` : '/admin/pools' %>" method="POST">
+              <% if (isEdit) { %>
+                <input type="hidden" name="_method" value="PUT">
+              <% } %>
+              
+              <!-- Basic Information -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="poolId" class="form-label">Pool ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="poolId" name="poolId" 
+                         value="<%= pool.poolId || '' %>" 
+                         <%= isEdit ? 'readonly' : '' %>
+                         placeholder="e.g., tenant-123" required>
+                  <div class="form-text">Unique identifier for this tenant pool</div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="poolName" class="form-label">Pool Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="poolName" name="poolName" 
+                         value="<%= pool.poolName || '' %>" 
+                         placeholder="e.g., My Company Pool" required>
+                  <div class="form-text">Human-readable name for this pool</div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="clientId" class="form-label">Default Client ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="clientId" name="clientId" 
+                         value="<%= pool.clientId || '' %>" 
+                         placeholder="e.g., tenant-123-client" required>
+                  <div class="form-text">Default OIDC client for this pool</div>
+                </div>
+              </div>
+
+              <!-- Password Policy -->
+              <div class="card mt-4">
+                <div class="card-header">
+                  <h6 class="mb-0">Password Policy</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-3 mb-3">
+                      <label for="minLength" class="form-label">Min Length</label>
+                      <input type="number" class="form-control" id="minLength" name="minLength" 
+                             value="<%= (pool.settings && pool.settings.passwordPolicy) ? pool.settings.passwordPolicy.minLength : 8 %>" 
+                             min="6" max="32">
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                      <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="requireUppercase" name="requireUppercase" 
+                               <%= (pool.settings && pool.settings.passwordPolicy && pool.settings.passwordPolicy.requireUppercase) ? 'checked' : 'checked' %>>
+                        <label class="form-check-label" for="requireUppercase">
+                          Require Uppercase
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                      <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="requireLowercase" name="requireLowercase" 
+                               <%= (pool.settings && pool.settings.passwordPolicy && pool.settings.passwordPolicy.requireLowercase) ? 'checked' : 'checked' %>>
+                        <label class="form-check-label" for="requireLowercase">
+                          Require Lowercase
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                      <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="requireNumbers" name="requireNumbers" 
+                               <%= (pool.settings && pool.settings.passwordPolicy && pool.settings.passwordPolicy.requireNumbers) ? 'checked' : 'checked' %>>
+                        <label class="form-check-label" for="requireNumbers">
+                          Require Numbers
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-3 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="requireSymbols" name="requireSymbols" 
+                               <%= (pool.settings && pool.settings.passwordPolicy && pool.settings.passwordPolicy.requireSymbols) ? 'checked' : '' %>>
+                        <label class="form-check-label" for="requireSymbols">
+                          Require Symbols
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MFA Configuration -->
+              <div class="card mt-4">
+                <div class="card-header">
+                  <h6 class="mb-0">Multi-Factor Authentication</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="mfaConfiguration" class="form-label">MFA Setting</label>
+                      <select class="form-select" id="mfaConfiguration" name="mfaConfiguration">
+                        <option value="OFF" <%= (pool.settings && pool.settings.mfaConfiguration === 'OFF') ? 'selected' : 'selected' %>>Disabled</option>
+                        <option value="OPTIONAL" <%= (pool.settings && pool.settings.mfaConfiguration === 'OPTIONAL') ? 'selected' : '' %>>Optional</option>
+                        <option value="ON" <%= (pool.settings && pool.settings.mfaConfiguration === 'ON') ? 'selected' : '' %>>Required</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Account Recovery -->
+              <div class="card mt-4">
+                <div class="card-header">
+                  <h6 class="mb-0">Account Recovery</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="emailRecovery" name="emailRecovery" 
+                               <%= (pool.settings && pool.settings.accountRecovery && pool.settings.accountRecovery.email) ? 'checked' : 'checked' %>>
+                        <label class="form-check-label" for="emailRecovery">
+                          Email Recovery
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="smsRecovery" name="smsRecovery" 
+                               <%= (pool.settings && pool.settings.accountRecovery && pool.settings.accountRecovery.sms) ? 'checked' : '' %>>
+                        <label class="form-check-label" for="smsRecovery">
+                          SMS Recovery
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom Attributes -->
+              <div class="card mt-4">
+                <div class="card-header">
+                  <h6 class="mb-0">Custom Attributes</h6>
+                </div>
+                <div class="card-body">
+                  <div id="customAttributes">
+                    <% if (pool.customAttributes) { %>
+                      <% Object.keys(pool.customAttributes).forEach((key, index) => { %>
+                        <div class="row mb-3 custom-attribute">
+                          <div class="col-md-4">
+                            <input type="text" class="form-control" name="customAttributeKey[]" 
+                                   value="<%= key %>" placeholder="Attribute name">
+                          </div>
+                          <div class="col-md-4">
+                            <select class="form-select" name="customAttributeType[]">
+                              <option value="string" <%= pool.customAttributes[key] === 'string' ? 'selected' : '' %>>String</option>
+                              <option value="number" <%= pool.customAttributes[key] === 'number' ? 'selected' : '' %>>Number</option>
+                              <option value="boolean" <%= pool.customAttributes[key] === 'boolean' ? 'selected' : '' %>>Boolean</option>
+                            </select>
+                          </div>
+                          <div class="col-md-4">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeCustomAttribute(this)">
+                              <i class="fas fa-trash"></i> Remove
+                            </button>
+                          </div>
+                        </div>
+                      <% }); %>
+                    <% } %>
+                  </div>
+                  
+                  <button type="button" class="btn btn-outline-primary" onclick="addCustomAttribute()">
+                    <i class="fas fa-plus"></i> Add Custom Attribute
+                  </button>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between mt-4">
+                <a href="/admin" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                  <%= isEdit ? 'Update Pool' : 'Create Pool' %>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">💡 Tips</h6>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Pool ID:</strong> Choose a unique identifier that represents your tenant
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Client ID:</strong> Will be used for OIDC authentication
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Custom Attributes:</strong> Add fields specific to your tenant's needs
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-lightbulb text-warning"></i>
+                <strong>Password Policy:</strong> Configure security requirements for user passwords
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function addCustomAttribute() {
+      const container = document.getElementById('customAttributes');
+      const div = document.createElement('div');
+      div.className = 'row mb-3 custom-attribute';
+      div.innerHTML = `
+        <div class="col-md-4">
+          <input type="text" class="form-control" name="customAttributeKey[]" placeholder="Attribute name">
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="customAttributeType[]">
+            <option value="string">String</option>
+            <option value="number">Number</option>
+            <option value="boolean">Boolean</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button type="button" class="btn btn-outline-danger" onclick="removeCustomAttribute(this)">
+            <i class="fas fa-trash"></i> Remove
+          </button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+    
+    function removeCustomAttribute(button) {
+      button.closest('.custom-attribute').remove();
+    }
+    
+    // Auto-generate pool ID and client ID if needed
+    document.getElementById('poolName').addEventListener('input', function() {
+      if (!document.getElementById('poolId').value) {
+        const poolName = this.value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+        document.getElementById('poolId').value = poolName ? `${poolName}-pool` : '';
+      }
+      
+      if (!document.getElementById('clientId').value) {
+        const poolName = this.value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+        document.getElementById('clientId').value = poolName ? `${poolName}-client` : '';
+      }
+    });
+  </script>
+</body>
+</html>

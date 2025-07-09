@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/fontawesome.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/admin">🔐 Identity Server Admin</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/admin">Dashboard</a>
+        <a class="nav-link" href="/admin/users">Users</a>
+        <a class="nav-link" href="/admin/applications">Applications</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <!-- Breadcrumbs -->
+    <% if (typeof breadcrumbs !== 'undefined' && breadcrumbs) { %>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <% breadcrumbs.forEach(breadcrumb => { %>
+          <% if (breadcrumb.active) { %>
+            <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
+          <% } else { %>
+            <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.name %></a></li>
+          <% } %>
+        <% }); %>
+      </ol>
+    </nav>
+    <% } %>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1>🚀 Create Application with Pool</h1>
+            <p class="lead">Set up a complete identity solution with application and user pool</p>
+          </div>
+          <a href="/admin/applications" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Applications
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/admin/applications/create-with-pool" method="POST">
+      <div class="row">
+        <!-- Application Configuration -->
+        <div class="col-lg-6">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-desktop"></i> Application Configuration</h5>
+            </div>
+            <div class="card-body">
+              <!-- Application Name -->
+              <div class="mb-3">
+                <label for="client_name" class="form-label">Application Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="client_name" name="client_name" 
+                       value="<%= application.client_name || '' %>" 
+                       placeholder="e.g., My Web App" required>
+                <div class="form-text">Human-readable name for this application</div>
+              </div>
+
+              <!-- Redirect URIs -->
+              <div class="mb-3">
+                <label for="redirect_uris" class="form-label">Redirect URIs <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="redirect_uris" name="redirect_uris" 
+                          rows="3" placeholder="https://example.com/callback" required><%= application.redirect_uris || '' %></textarea>
+                <div class="form-text">Enter one URI per line. These are the allowed callback URLs after authentication.</div>
+              </div>
+
+              <!-- Grant Types -->
+              <div class="mb-3">
+                <label class="form-label">Grant Types</label>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="authorization_code" name="grant_types" value="authorization_code" checked>
+                      <label class="form-check-label" for="authorization_code">
+                        Authorization Code
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="refresh_token" name="grant_types" value="refresh_token" checked>
+                      <label class="form-check-label" for="refresh_token">
+                        Refresh Token
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="client_credentials" name="grant_types" value="client_credentials">
+                      <label class="form-check-label" for="client_credentials">
+                        Client Credentials
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scope -->
+              <div class="mb-3">
+                <label for="scope" class="form-label">Scope</label>
+                <input type="text" class="form-control" id="scope" name="scope" 
+                       value="<%= application.scope || 'openid profile email' %>" 
+                       placeholder="openid profile email">
+                <div class="form-text">Space-separated list of OAuth 2.0 scopes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pool Configuration -->
+        <div class="col-lg-6">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-users"></i> User Pool Configuration</h5>
+            </div>
+            <div class="card-body">
+              <!-- Pool Name -->
+              <div class="mb-3">
+                <label for="pool_name" class="form-label">Pool Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="pool_name" name="pool_name" 
+                       value="<%= pool.pool_name || '' %>" 
+                       placeholder="e.g., My Company Users" required>
+                <div class="form-text">Human-readable name for this user pool</div>
+              </div>
+
+              <!-- MFA Configuration -->
+              <div class="mb-3">
+                <label for="mfa_configuration" class="form-label">Multi-Factor Authentication</label>
+                <select class="form-select" id="mfa_configuration" name="mfa_configuration">
+                  <option value="OFF" selected>Disabled</option>
+                  <option value="OPTIONAL">Optional</option>
+                  <option value="ON">Required</option>
+                </select>
+              </div>
+
+              <!-- Password Policy -->
+              <div class="card mt-3">
+                <div class="card-header">
+                  <h6 class="mb-0">Password Policy</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="password_min_length" class="form-label">Min Length</label>
+                      <input type="number" class="form-control" id="password_min_length" name="password_min_length" 
+                             value="<%= pool.password_min_length || 8 %>" min="6" max="32">
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="password_require_uppercase" name="password_require_uppercase" checked>
+                        <label class="form-check-label" for="password_require_uppercase">
+                          Require Uppercase
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="password_require_lowercase" name="password_require_lowercase" checked>
+                        <label class="form-check-label" for="password_require_lowercase">
+                          Require Lowercase
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="password_require_numbers" name="password_require_numbers" checked>
+                        <label class="form-check-label" for="password_require_numbers">
+                          Require Numbers
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="password_require_symbols" name="password_require_symbols">
+                        <label class="form-check-label" for="password_require_symbols">
+                          Require Symbols
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips and Submit -->
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">💡 What happens when you submit?</h6>
+            </div>
+            <div class="card-body">
+              <ol class="mb-0">
+                <li><strong>User Pool Creation:</strong> A new user pool will be created with your specified settings</li>
+                <li><strong>Application Registration:</strong> The application will be registered as an OIDC client</li>
+                <li><strong>Automatic Linking:</strong> The application and pool will be automatically linked together</li>
+                <li><strong>Ready to Use:</strong> Users can immediately register and authenticate with your application</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-body text-center">
+              <h6 class="card-title">Ready to Create?</h6>
+              <p class="card-text text-muted">This will set up a complete identity solution</p>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="fas fa-rocket"></i> Create Application + Pool
+                </button>
+                <a href="/admin/applications" class="btn btn-secondary">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Auto-sync names when one is changed
+    document.getElementById('client_name').addEventListener('input', function() {
+      if (!document.getElementById('pool_name').value) {
+        document.getElementById('pool_name').value = this.value + ' Users';
+      }
+    });
+    
+    document.getElementById('pool_name').addEventListener('input', function() {
+      if (!document.getElementById('client_name').value) {
+        const appName = this.value.replace(' Users', '');
+        document.getElementById('client_name').value = appName;
+      }
+    });
+  </script>
+</body>
+</html>

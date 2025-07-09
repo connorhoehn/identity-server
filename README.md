@@ -74,6 +74,3 @@ A modern OIDC Identity Server with multi-tenant admin UI, robust MFA, and quick 
 
 > See the demo GIF above for a walkthrough.  
 > For advanced usage, see `./rebuild.sh help`.
-
----
-# identity-server

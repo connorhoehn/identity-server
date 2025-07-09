@@ -1,0 +1,58 @@
+{
+  "test-client": {
+    "client_name": "Test Client Application",
+    "client_id": "test-client",
+    "client_secret": "test-secret",
+    "redirect_uris": ["http://localhost:3001/callback"],
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "scope": "openid profile email",
+    "token_endpoint_auth_method": "client_secret_basic"
+  },
+  "dev-app": {
+    "client_name": "Development Application",
+    "client_id": "dev-app-client",
+    "redirect_uris": [
+      "http://localhost:3000/auth/callback",
+      "http://localhost:8080/callback"
+    ],
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "scope": "openid profile email",
+    "token_endpoint_auth_method": "client_secret_basic"
+  },
+  "mobile-app": {
+    "client_name": "Mobile Application",
+    "client_id": "mobile-app-client",
+    "redirect_uris": [
+      "myapp://callback",
+      "http://localhost/callback"
+    ],
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "scope": "openid profile email",
+    "token_endpoint_auth_method": "none"
+  },
+  "spa-app": {
+    "client_name": "Single Page Application",
+    "client_id": "spa-app-client",
+    "redirect_uris": [
+      "http://localhost:3000",
+      "http://localhost:8080",
+      "https://myapp.example.com"
+    ],
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "scope": "openid profile email",
+    "token_endpoint_auth_method": "none"
+  },
+  "api-client": {
+    "client_name": "API Client (Server-to-Server)",
+    "client_id": "api-client",
+    "redirect_uris": [],
+    "grant_types": ["client_credentials"],
+    "response_types": [],
+    "scope": "api:read api:write",
+    "token_endpoint_auth_method": "client_secret_basic"
+  }
+}

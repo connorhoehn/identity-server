@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <h1 class="display-1 text-danger">⚠️</h1>
+            <h2 class="card-title">Error</h2>
+            <p class="card-text"><%= message %></p>
+            <% if (typeof stack !== 'undefined' && stack) { %>
+              <details class="mt-3">
+                <summary>Error Details</summary>
+                <pre class="text-start"><%= stack %></pre>
+              </details>
+            <% } %>
+            <a href="/" class="btn btn-primary mt-3">Go Home</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
