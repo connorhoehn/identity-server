@@ -14,6 +14,10 @@ A modern OIDC Identity Server with multi-tenant admin UI, robust MFA, and quick 
 - Dockerized for easy local/dev use
 - Test consumer app for OIDC flows
 
+![Admin Dashboard](assets/admin_dashboard.png)
+![Pool Config](assets/pool_configuration.png)
+
+
 ## Architecture
 
 ```
